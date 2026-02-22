@@ -4,18 +4,18 @@ import math
 
 pygame.init()
 
-# ==============================
+
 # SCREEN SETUP
-# ==============================
+
 
 width = 800
 height = 480
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Race Dash Prototype")
 
-# ==============================
+
 # COLORS
-# ==============================
+
 
 black  = (0, 0, 0)
 green  = (0, 255, 0)
@@ -28,14 +28,16 @@ darkGray = (30, 30, 30)
 
 clock = pygame.time.Clock()
 
-# ==============================
+
 # SIM DATA
-# ==============================
+
 
 rpm = 0
 speed = 0
 rpmDirection = 1
 tempPercent = 0.6
+gForce = 0.0
+
 neutral = True
 oilPressureWarning = True
 
@@ -47,9 +49,9 @@ lastLapColor = white
 bestLapIndex = -1
 
 
-# ==============================
-# GPS TRACK SYSTEM (UPDATED)
-# ==============================
+
+# GPS TRACK SYSTEM 
+
 
 laps = []                  # Stores completed laps
 currentLapPoints = []      # Points for active lap
@@ -60,9 +62,9 @@ gpsAngle = 0
 
 trackRect = pygame.Rect(20, 140, 300, 300)   # Slightly moved down to avoid UI overlap
 
-# ==============================
+
 # MAIN LOOP
-# ==============================
+
 
 running = True
 while running:
@@ -73,9 +75,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    # --------------------------
+
     # SIM ENGINE
-    # --------------------------
+
 
     rpm += 120 * rpmDirection
 
@@ -90,9 +92,9 @@ while running:
 
     tempPercent = 0.5 + (math.sin(pygame.time.get_ticks() * 0.001) * 0.1)
 
-    # --------------------------
+
     # SIM GPS
-    # --------------------------
+
 
     gpsAngle += 0.01
     radius = 0.001
@@ -102,9 +104,9 @@ while running:
 
     currentLapPoints.append((currentLat, currentLon))
 
-    # --------------------------
+
     # LAP DETECTION
-    # --------------------------
+
 
     lapTime += deltaTime
 
@@ -129,16 +131,13 @@ while running:
 
         lapTime = 0
 
-    # --------------------------
-    # DRAW
-    # --------------------------
 
+    # DRAW
     screen.fill(black)
 
-    # ==========================
+  
     # RPM BAR
-    # ==========================
-
+ 
     rpmPercent = min(rpm / 13000, 1.0)
 
     barTotalWidth = 500
@@ -176,25 +175,23 @@ while running:
         warningFont = pygame.font.SysFont("Arial", 24, bold=True)
         warningSurface = warningFont.render("LOW OIL PRESSURE!", True, red)
         screen.blit(warningSurface, (width//2 - warningSurface.get_width()//2, barY + 50 + barHeight + 10))
-    # ==========================
+
     # RPM NUMBER
-    # ==========================
+
 
     rpmFont = pygame.font.SysFont("Arial", 40)
     rpmSurface = rpmFont.render(str(rpm), True, green)
     screen.blit(rpmSurface, (width//2 - rpmSurface.get_width()//2, 70))
 
-    # ==========================
+
     # SPEED DISPLAY
-    # ==========================
+
 
     speedFont = pygame.font.SysFont("Arial", 140)
     speedSurface = speedFont.render(str(speed), True, white)
     screen.blit(speedSurface, (width//2 - speedSurface.get_width()//2, 150))
 
-    # ==========================
     # LAP INFO PANEL
-    # ==========================
 
     timeFont = pygame.font.SysFont("Arial", 28)
 
@@ -203,9 +200,9 @@ while running:
     screen.blit(timeFont.render(f"Last: {lastLapTime:.2f}", True, lastLapColor), (20, 80))
     screen.blit(timeFont.render(f"Best: {bestLapTime:.2f}", True, blue), (20, 110))
 
-    # ==========================
-    # TRACK MAP (UPDATED COLORS)
-    # ==========================
+
+    # TRACK MAP
+
 
     pygame.draw.rect(screen, (20, 20, 20), trackRect, border_radius=12)
     pygame.draw.rect(screen, (0, 120, 0), trackRect, 2, border_radius=12)
@@ -255,9 +252,9 @@ while running:
             pygame.draw.lines(screen, green, False, currentPts, 3)
             pygame.draw.circle(screen, red, currentPts[-1], 6)
 
-                # ==========================
+               
+
     # TEMP BAR
-    # ==========================
 
     tempBarHeight = 300
     tempBarWidth = 40
@@ -272,6 +269,10 @@ while running:
     else:
         tempColor = red
 
+    # G-Force display
+    gForceFont = pygame.font.SysFont("Arial", 24, bold=True)
+    gForceSurface = gForceFont.render(f"G: {gForce:.2f}", True, white)
+    screen.blit(gForceSurface, (tempBarX - 20, tempBarY + tempBarHeight + 10))
     
     # Background
     pygame.draw.rect(screen, gray, 
