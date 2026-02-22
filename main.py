@@ -1,3 +1,5 @@
+from random import random
+
 import pygame
 import sys
 import math
@@ -104,6 +106,9 @@ while running:
 
     currentLapPoints.append((currentLat, currentLon))
 
+    # Sim G Force
+    gForce += 0.02  * math.sin(pygame.time.get_ticks() * 0.002) + 0.02 * random() - 0.01
+    gForce = max(0, min(gForce, 3))  # Clamp between 0 and 3
 
     # LAP DETECTION
 
