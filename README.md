@@ -1,1 +1,3 @@
-This is supposed to be a dashboard for a race car which will be displayed using a rasberry pi at 60hz
+This is supposed to be a dashboard for a race car which will be displayed using a rasberry pi at 60hz.
+this is what it currently looks like.
+<img width="796" height="473" alt="image" src="https://github.com/user-attachments/assets/43fb2f30-4d17-4ad2-b7a9-9bd40ca183e6" />
