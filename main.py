@@ -28,19 +28,18 @@ DARK_GRAY = (30, 30, 30)
 # STATE
 # ---------------------------
 state = {
-    "rpm": 0,
+    "RPM": 0,
     "speed": 0,
-    "tempPercent": 0.6,
-    "gForce": 0.0,
-    "neutral": True,
-    "oilWarning": True,
+    "coolantTemp": 80,
+    "Neutral": True,
+    "oilPressureWarning": True,
     "lap": {
         "count": 0,
         "current": 0,
         "last": 0,
         "best": 0
     },
-    "gps": {
+    "GPS": {
         "lat": 51.0,
         "lon": -0.1
     }
@@ -77,17 +76,17 @@ def update_from_json(data):
 def demo_data(dt):
     global gpsAngle, rpmDirection, bestLapIndex, lastLapColor
 
-    state["rpm"] += 120 * rpmDirection
+    state["RPM"] += 120 * rpmDirection
 
-    if state["rpm"] > 13000:
-        state["rpm"] = 13000
+    if state["RPM"] > 13000:
+        state["RPM"] = 13000
         rpmDirection = -1
-    if state["rpm"] < 2000:
+    if state["RPM"] < 2000:
         rpmDirection = 1
 
-    state["speed"] = int(state["rpm"] / 130)
+    state["speed"] = int(state["RPM"] / 130)
 
-    state["tempPercent"] = 0.5 + math.sin(pygame.time.get_ticks() * 0.001) * 0.1
+    state["coolantTemp"] = 80 + math.sin(pygame.time.get_ticks() * 0.001) * 15
 
     # GPS movement
     gpsAngle += 0.01
@@ -95,12 +94,8 @@ def demo_data(dt):
     radius = 0.001 + 0.0002 * math.sin(pygame.time.get_ticks() * 0.0007)
     offset = 0.00015 * math.sin(gpsAngle * 3 + pygame.time.get_ticks() * 0.001)
 
-    state["gps"]["lat"] = 51.0 + math.cos(gpsAngle) * (radius + offset)
-    state["gps"]["lon"] = -0.1 + math.sin(gpsAngle) * (radius - offset)
-
-    # G-force
-    state["gForce"] += 0.02 * math.sin(pygame.time.get_ticks() * 0.002) + 0.02 * random() - 0.01
-    state["gForce"] = max(0, min(state["gForce"], 3))
+    state["GPS"]["lat"] = 51.0 + math.cos(gpsAngle) * (radius + offset)
+    state["GPS"]["lon"] = -0.1 + math.sin(gpsAngle) * (radius - offset)
 
     # Lap timing
     state["lap"]["current"] += dt
@@ -133,15 +128,15 @@ def demo_data(dt):
 # TRACK UPDATE
 # ---------------------------
 def update_track():
-    lat = state["gps"]["lat"]
-    lon = state["gps"]["lon"]
+    lat = state["GPS"]["lat"]
+    lon = state["GPS"]["lon"]
     currentLapPoints.append((lat, lon))
 
 # ---------------------------
 # DRAW FUNCTIONS
 # ---------------------------
 def draw_rpm_bar():
-    rpmPercent = min(state["rpm"] / 13000, 1.0)
+    rpmPercent = min(state["RPM"] / 13000, 1.0)
 
     barWidth = 500
     barX = (WIDTH - barWidth) // 2
@@ -161,12 +156,12 @@ def draw_rpm_bar():
 
         pygame.draw.rect(screen, color, (x, barY, segmentWidth, 30), border_radius=4)
 
-    if state["neutral"]:
+    if state["Neutral"]:
         font = pygame.font.SysFont("Arial", 60, bold=True)
         surf = font.render("N", True, GREEN)
         screen.blit(surf, (barX + barWidth + 70, barY - 2))
 
-    if state["oilWarning"]:
+    if state["oilPressureWarning"]:
         font = pygame.font.SysFont("Arial", 24, bold=True)
         surf = font.render("LOW OIL PRESSURE!", True, RED)
         screen.blit(surf, (WIDTH//2 - surf.get_width()//2, barY + 50))
@@ -179,7 +174,7 @@ def draw_text():
     speedSurface = font_big.render(str(state["speed"]), True, WHITE)
     screen.blit(speedSurface, (WIDTH//2 - speedSurface.get_width()//2, 150))
 
-    rpmSurface = font_med.render(str(state["rpm"]), True, GREEN)
+    rpmSurface = font_med.render(str(state["RPM"]), True, GREEN)
     screen.blit(rpmSurface, (WIDTH//2 - rpmSurface.get_width()//2, 260))
 
     lap = state["lap"]
@@ -229,22 +224,55 @@ def draw_track():
         pygame.draw.lines(screen, GREEN, False, currentPts, 3)
         pygame.draw.circle(screen, RED, currentPts[-1], 6)
 
+def lerp_color(a, b, t):
+    return (
+        int(a[0] + (b[0] - a[0]) * t),
+        int(a[1] + (b[1] - a[1]) * t),
+        int(a[2] + (b[2] - a[2]) * t),
+    )
+
+def gradient_color(t):
+    # t: 0.0 (cool) → 1.0 (hot)
+    # stops: green → orange → red
+    if t < 0.5:
+        return lerp_color(GREEN, ORANGE, t / 0.5)
+    else:
+        return lerp_color(ORANGE, RED, (t - 0.5) / 0.5)
+
 def draw_temp_bar():
+    MAX_TEMP = 120
+
     x = WIDTH - 80
     y = 120
     h = 300
 
-    temp = state["tempPercent"]
-    color = GREEN if temp < 0.7 else ORANGE if temp < 0.9 else RED
+    temp = state["coolantTemp"]
+    tempPercent = min(temp / MAX_TEMP, 1.0)
 
+    # Background
     pygame.draw.rect(screen, GRAY, (x, y, 40, h), border_radius=8)
 
-    filled = h * temp
-    pygame.draw.rect(screen, color, (x, y + (h - filled), 40, filled), border_radius=8)
+    # Gradient fill: draw 1px horizontal slices from the fill start down to bar bottom
+    filled = int(h * tempPercent)
+    fill_top = y + (h - filled)
+    for i in range(filled):
+        row_t = 1.0 - (h - filled + i) / h   # 0 at bar bottom, 1 at bar top
+        color = gradient_color(row_t)
+        pygame.draw.line(screen, color, (x, fill_top + i), (x + 39, fill_top + i))
 
-    font = pygame.font.SysFont("Arial", 24, bold=True)
-    g = font.render(f"G: {state['gForce']:.2f}", True, WHITE)
-    screen.blit(g, (x - 20, y + h + 10))
+    # Redraw border on top of the gradient
+    pygame.draw.rect(screen, GRAY, (x, y, 40, h), 2, border_radius=8)
+
+    tip_color = gradient_color(tempPercent)
+
+    font_label = pygame.font.SysFont("Arial", 20)
+    font_value = pygame.font.SysFont("Arial", 32, bold=True)
+
+    label = font_label.render("COOLANT", True, GRAY)
+    screen.blit(label, (x + 20 - label.get_width() // 2, y - 45))
+
+    value = font_value.render(f"{temp:.0f}°C", True, tip_color)
+    screen.blit(value, (x + 20 - value.get_width() // 2, y - 25))
 
 # ---------------------------
 # MAIN LOOP
@@ -262,7 +290,7 @@ while running:
     if USE_DEMO:
         demo_data(dt)
     else:
-        json_input = '{"rpm":5000,"speed":80}'
+        json_input = '{"RPM": 5670, "speed": 60, "coolantTemp": 80, "GPS": {"lat": 51.0, "lon": -0.1}, "oilPressureWarning": false, "Neutral": true}'
         update_from_json(json.loads(json_input))
 
     update_track()
