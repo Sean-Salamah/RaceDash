@@ -6,9 +6,9 @@ from random import random
 
 pygame.init()
 
-# ---------------------------
+
 # CONFIG
-# ---------------------------
+
 WIDTH, HEIGHT = 800, 480
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Race Dash Prototype")
@@ -24,9 +24,9 @@ WHITE = (230, 230, 230)
 GRAY = (60, 60, 60)
 DARK_GRAY = (30, 30, 30)
 
-# ---------------------------
+
 # STATE
-# ---------------------------
+
 state = {
     "RPM": 0,
     "speed": 0,
@@ -53,15 +53,13 @@ lastLapColor = WHITE
 
 trackRect = pygame.Rect(20, 140, 300, 300)
 
-# ---------------------------
 # GLOBAL SIM STATE (FIXED)
-# ---------------------------
+
 gpsAngle = 0
 rpmDirection = 1
 
-# ---------------------------
 # JSON INPUT
-# ---------------------------
+
 def update_from_json(data):
     for key in data:
         if key in state:
@@ -70,9 +68,9 @@ def update_from_json(data):
             else:
                 state[key] = data[key]
 
-# ---------------------------
+
 # DEMO DATA
-# ---------------------------
+
 def demo_data(dt):
     global gpsAngle, rpmDirection, bestLapIndex, lastLapColor
 
@@ -124,17 +122,17 @@ def demo_data(dt):
 
         state["lap"]["current"] = 0
 
-# ---------------------------
+
 # TRACK UPDATE
-# ---------------------------
+
 def update_track():
     lat = state["GPS"]["lat"]
     lon = state["GPS"]["lon"]
     currentLapPoints.append((lat, lon))
 
-# ---------------------------
+
 # DRAW FUNCTIONS
-# ---------------------------
+
 def draw_rpm_bar():
     rpmPercent = min(state["RPM"] / 13000, 1.0)
 
@@ -232,8 +230,8 @@ def lerp_color(a, b, t):
     )
 
 def gradient_color(t):
-    # t: 0.0 (cool) → 1.0 (hot)
-    # stops: green → orange → red
+    # t: 0.0 (cool)  1.0 (hot)
+    # stops: green orange  red
     if t < 0.5:
         return lerp_color(GREEN, ORANGE, t / 0.5)
     else:
@@ -274,9 +272,9 @@ def draw_temp_bar():
     value = font_value.render(f"{temp:.0f}°C", True, tip_color)
     screen.blit(value, (x + 20 - value.get_width() // 2, y - 25))
 
-# ---------------------------
+
 # MAIN LOOP
-# ---------------------------
+
 running = True
 USE_DEMO = True
 
