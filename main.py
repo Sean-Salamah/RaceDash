@@ -272,15 +272,35 @@ def draw_temp_bar():
     value = font_value.render(f"{temp:.0f}°C", True, tip_color)
     screen.blit(value, (x + 20 - value.get_width() // 2, y - 25))
 
+# SERIAL INPUT (ESP32 over the Pi's GPIO UART)
+import serial, threading, queue
 
+SERIAL_PORT = "/dev/serial0"   # GPIO UART on the Pi
+BAUD = 115200
+msg_queue = queue.Queue()
+
+def serial_reader():
+    try:
+        ser = serial.Serial(SERIAL_PORT, BAUD, timeout=0.1)
+    except Exception as e:
+        print("Could not open serial port:", e)
+        return
+    while True:
+        try:
+            line = ser.readline().decode("utf-8").strip()
+            if line:
+                msg_queue.put(json.loads(line))
+        except Exception:
+            pass   # ignore garbled/partial lines
+
+threading.Thread(target=serial_reader, daemon=True).start()
 # MAIN LOOP
 
 running = True
-USE_DEMO = True
+USE_DEMO = False   # flip back to True to run the simulator with no hardware
 
 while running:
     dt = clock.tick(60) / 1000.0
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -288,8 +308,8 @@ while running:
     if USE_DEMO:
         demo_data(dt)
     else:
-        json_input = '{"RPM": 5670, "speed": 60, "coolantTemp": 80, "GPS": {"lat": 51.0, "lon": -0.1}, "oilPressureWarning": false, "Neutral": true}'
-        update_from_json(json.loads(json_input))
+        while not msg_queue.empty():
+            update_from_json(msg_queue.get())
 
     update_track()
 
