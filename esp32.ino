@@ -9,7 +9,8 @@
    CONFIG
    ========================================================== */
 
-constexpr float TYRE_CIRCUMFERENCE_M = 2.000f; //Needs to be changed to the correct circumference of the tyres
+constexpr float TYRE_DIAMETER_M = 0.4064f; 
+constexpr float TYRE_CIRCUMFERENCE_M = TYRE_DIAMETER_M * 3.14159265f;
 
 constexpr float RPM_PULSES_PER_REV   = 1.0f; //A temporary value to be changed during testing
 constexpr float SPEED_PULSES_PER_REV = 1.0f; //A temporary value to be changed during testing
