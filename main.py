@@ -299,8 +299,11 @@ threading.Thread(target=serial_reader, daemon=True).start()
 running = True
 USE_DEMO = False   # flip back to True to run the simulator with no hardware
 
-if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-    running = False
+for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            running = False
     
 while running:
     dt = clock.tick(60) / 1000.0
