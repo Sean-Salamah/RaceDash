@@ -10,7 +10,7 @@ pygame.init()
 # CONFIG
 
 WIDTH, HEIGHT = 800, 480
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN | pygame.SCALED)
 pygame.display.set_caption("Race Dash Prototype")
 clock = pygame.time.Clock()
 
@@ -299,11 +299,15 @@ threading.Thread(target=serial_reader, daemon=True).start()
 running = True
 USE_DEMO = False   # flip back to True to run the simulator with no hardware
 
+if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+    running = False
+    
 while running:
     dt = clock.tick(60) / 1000.0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        
 
     if USE_DEMO:
         demo_data(dt)
